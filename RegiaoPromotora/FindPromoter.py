@@ -4,6 +4,7 @@ import argparse
 import pyranges as pr
 import pandas as pd
 
+
 parser= argparse.ArgumentParser(description='Insert the lenth of the Expected Promoter')
 parser.add_argument('integers', metavar='N', type=int,
                             help='insert the lenth of the Pormoter')
@@ -11,6 +12,8 @@ Promoter = parser.parse_args()
 #print(Promoter.integers)
 
 lenPromoter = Promoter.integers
+
+
 
 gff = pr.read_gff3(r"/mnt/d/joaon/TCC/Programação_TCC/GFFs/TESTE_CTBE.gff3", as_df=True) #lê o arquivo gff3
 
@@ -27,6 +30,7 @@ gffgenepluscomparison.loc[:,"End"] = PromoterEndplus
 
 PRgplus = pr.PyRanges(gffgeneplus)
 PRgpluscomparison = pr.PyRanges(gffgenepluscomparison)
+PRgpluscomparison.Feature = "Promoter"
 
 #1print(PRgplus, PRgpluscomparison)
 regiaopromotora = PRgpluscomparison.subtract(PRgplus, strandedness="same")  
@@ -45,20 +49,15 @@ for idpromoter in regiaopromotora.ID:
         regiaopromotora = pr.concat([regiaopromotora, promotorcorreto])
     IDanterior=idpromoter
 
-SeqPromotora = pr.get_fasta(regiaopromotora, "/mnt/d/joaon/TCC/Programação_TCC/Genomas/TESTE_GCA_CTBE.fna")
-regiaopromotora.seq=SeqPromotora
+#SeqPromotora = pr.get_fasta(regiaopromotora, "/mnt/d/joaon/TCC/Programação_TCC/Genomas/TESTE_GCA_CTBE.fna")
+#regiaopromotora.seq=SeqPromotora
 
-print(regiaopromotora.ID)
-for ID in regiaopromotora.ID:
-    seqID = regiaopromotora[regiaopromotora.ID == ID].seq
-    #print(f'>{ID}\n{str(seqID)}')
+with open ("TesteFastaSeqPromotoraPlus.txt","w") as TesteFastaSeqPromotora:
+    for ID in regiaopromotora.ID:
+        seqID = pr.get_fasta(regiaopromotora[regiaopromotora.ID == ID], "/mnt/d/joaon/TCC/Programação_TCC/Genomas/TESTE_GCA_CTBE.fna")
+        for line in seqID:
+            TesteFastaSeqPromotora.write(f'>{ID}\n{line}\n')
         
-#print(SeqPromotora)
-###ESCRITA EM ARQUIVO
-#with open ("TesteFastaSeqPromotoraPlus.txt","w") as TesteFastaSeqPromotora:
-    for line in SeqPromotora:
-        TesteFastaSeqPromotora.write(line+"\n"+"\n")
-
 
 ########## para a fita negativa
 gffgeneminus=gff[(gff.Feature == "gene") & (gff.Strand == "-")] #separa fitas negativas
