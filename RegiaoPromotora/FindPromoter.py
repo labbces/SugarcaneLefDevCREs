@@ -14,6 +14,9 @@ parser.add_argument('genoma', type=str,
 parser.add_argument('gff', type=str,
                             help='genoma anotation in gff3 format')
 
+parser.add_argument('outputfile', type=str,
+                            help='output directory file')
+
 parser.add_argument('--fixid', action='store_true', 
                             help='store true to adjust the gene id adding version to the promoter id')
 parser.add_argument('--v', type=int, action="store",
@@ -24,6 +27,7 @@ args = parser.parse_args()
 genoma = args.genoma
 gff = args.gff
 lenPromoter = args.length
+outputfile = args.outputfile
 versao=args.v
 
 #conferir se o arquivo existe no disco
@@ -66,7 +70,7 @@ if args.fixid:
         regiaopromotora.Chromosome = regiaopromotora.Chromosome.astype(str) + (f'.{versao}')
 
 #Escrevendo arquivo fasta com as regiões promotoras
-with open ("TesteFastaSeqPromotora.txt","w") as TesteFastaSeqPromotora:
+with open (outputfile,"w") as TesteFastaSeqPromotora:
     for ID in regiaopromotora.ID:
         seqID = pr.get_fasta(regiaopromotora[regiaopromotora.ID == ID], genoma)
         for line in seqID:
