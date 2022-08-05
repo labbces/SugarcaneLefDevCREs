@@ -16,7 +16,7 @@ parser.add_argument('gff', type=str,
                             help='genoma anotation in gff3 format')
 
 parser.add_argument('outputfile', type=str, 
-                            help='output directory file')
+                            help='output file')
 
 parser.add_argument('--fixid', action='store_true', 
                             help='store true to adjust the gene id adding version to the promoter id')
