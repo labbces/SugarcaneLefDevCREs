@@ -3,18 +3,19 @@
 import argparse
 import pyranges as pr
 import pandas as pd
+import os
 
 parser= argparse.ArgumentParser(description='Insert the lenth of the Expected Promoter')
-parser.add_argument('length', type=int,
+parser.add_argument('length', type=int, 
                             help='insert the length of the Pormoter')
 
 parser.add_argument('genoma', type=str,
                             help='genoma sequence in fasta format')
 
-parser.add_argument('gff', type=str,
+parser.add_argument('gff', type=str, 
                             help='genoma anotation in gff3 format')
 
-parser.add_argument('outputfile', type=str,
+parser.add_argument('outputfile', type=str, 
                             help='output directory file')
 
 parser.add_argument('--fixid', action='store_true', 
@@ -30,7 +31,22 @@ lenPromoter = args.length
 outputfile = args.outputfile
 versao=args.v
 
+
 #conferir se o arquivo existe no disco
+
+if not os.path.isfile(genoma) or not os.path.isfile(gff):
+    if not os.path.isfile(genoma) and os.path.isfile(gff):
+        print('''Genoma file does not exist
+Please check the file name/directory again''')
+    if not os.path.isfile(gff) and os.path.isfile(genoma):
+        print('''GFF file does not exist
+Please check the file name/directory again''')
+    if not os.path.isfile(genoma) and not os.path.isfile(gff):
+        print('''Genoma file and GFF file do not exist
+Please check the file name/directory again''')
+    
+    quit()
+    
 
 gff = pr.read_gff3(gff, as_df=False) #lê o arquivo gff3
 
