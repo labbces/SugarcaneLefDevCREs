@@ -4,6 +4,7 @@ import argparse
 import pyranges as pr
 import pandas as pd
 import os
+import datetime
 
 parser= argparse.ArgumentParser(description='Insert the lenth of the Expected Promoter')
 parser.add_argument('length', type=int, 
@@ -51,8 +52,7 @@ Please check the file name/directory again''')
     quit()
     
 
-print("Arquivos conferidos") #Feedback 1 - arquivos conferidos
-
+print("Arquivos conferidos em", datetime.datetime.now()) #Feedback 1 - arquivos conferidos
 
 gff = pr.read_gff3(gff, as_df=False) #lê o arquivo gff3
 
@@ -89,7 +89,8 @@ for idpromoter in regiaopromotora.ID:
     IDanterior=idpromoter
 
 
-print("Overlaps e repetições conferidos e corrigidos") #Feedback 2 - Correção dos overlaps e repetições
+print("Overlaps e repetições conferidos e corrigidos em", datetime.datetime.now()) #Feedback 2 - Correção dos overlaps e repetições
+
 
 if args.fixid:
         regiaopromotora.Chromosome = regiaopromotora.Chromosome.astype(str) + (f'.{versao}')
