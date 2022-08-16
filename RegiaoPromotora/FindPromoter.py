@@ -56,6 +56,8 @@ print("Arquivos conferidos em", datetime.datetime.now()) #Feedback 1 - arquivos 
 
 gff = pr.read_gff3(gff, as_df=False) #lê o arquivo gff3
 
+print("Arquivo gff importado dentro do pyranges em", datetime.datetime.now()) #Feedback 2 - Importa o arquivo gff no pyranges 
+
 gffgeneplus=gff[(gff.Feature == "gene") & (gff.Strand == "+")] #separa fitas positivas
 gffgeneplus2=gffgeneplus.assign("PromoterStart", lambda x: x.Start-lenPromoter)
 gffgeneplus2=gffgeneplus2.assign("PromoterEnd", lambda x: x.Start)
@@ -72,7 +74,11 @@ gffgenecomparison.End=gffgenecomparison.PromoterEnd
 
 gffgenecomparison.Feature = "Promoter"
 
+print("Arquivo preparado para o subtract", datetime.datetime.now(), "- Próximo passo: Subtract") #Feedback 3 - Arquivo preparado para o subtract
+
 regiaopromotora = gffgenecomparison.subtract(gff, strandedness="same", nb_cpu=mcores)  
+
+print("Subtract efetuado em", datetime.datetime.now(), "- Próximo passo: excluir overlaps") #Feedback 4 - Subtract efetuado, próximo passo - excluir overlaps
 
 #ler o arquivo da regiao promotora e vê se o ID correspondente no arquivo gffgeneplus "menos Promoter_" está a 1 index de distância, se não deleta ele do arquivo regiao promotora
 # agora que achei o gene que repete, da para fazer um subset bseado no ID e armazenar em uma variável e apagar os que repetem do regiaopromotora. COmpara o subset com o gffgeneplus e ver qual é o nearest upstream (ou downstream para comparar e concatenar novamente no regiaopromotora.
@@ -83,14 +89,13 @@ for idpromoter in regiaopromotora.ID:
         reppromoter = regiaopromotora[regiaopromotora.ID == idpromoter]
         regiaopromotora = regiaopromotora[regiaopromotora.ID != idpromoter]
         Pgeneid = idpromoter.replace("Promoter_", "")
-        promotorcorreto = reppromoter.nearest(gff[gff.ID == Pgeneid], strandedness="same", how="downstream", nb_cpu=mcores)
+        promotorcorreto = reppromoter.nearest(gff[gff.ID == Pgeneid], strandedness="same", how="downstream")
         promotorcorreto = promotorcorreto[promotorcorreto.Distance == 1]
         regiaopromotora = pr.concat([regiaopromotora, promotorcorreto])
     IDanterior=idpromoter
 
 
-print("Overlaps e repetições conferidos e corrigidos em", datetime.datetime.now()) #Feedback 2 - Correção dos overlaps e repetições
-
+print("Overlaps e repetições conferidos e corrigidos em", datetime.datetime.now(), "- Próximo passo: escrever arquivo fasta com as regiões promotoras") #Feedback 5 - Correção dos overlaps e repetições e indicação da próxima etapa
 
 if args.fixid:
         regiaopromotora.Chromosome = regiaopromotora.Chromosome.astype(str) + (f'.{versao}')
@@ -103,3 +108,4 @@ with open (outputfile,"w") as TesteFastaSeqPromotora:
             TesteFastaSeqPromotora.write(f'>{ID}\n{line}\n')
         
 
+print("Termino do script - arquivo fasta com a regiões promotoras finalizado em", datetime.datetime.now()) #Feedback 3 - Correção dos overlaps e repetições e indicação da próxima etapa
