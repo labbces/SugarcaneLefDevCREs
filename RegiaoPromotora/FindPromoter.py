@@ -6,6 +6,7 @@ import pandas as pd
 import os
 import datetime
 import numpy as np
+import sys
 
 parser= argparse.ArgumentParser(description='Insert the lenth of the Expected Promoter')
 parser.add_argument('length', type=int, 
@@ -54,10 +55,12 @@ Please check the file name/directory again''')
     
 
 print("Arquivos conferidos em", datetime.datetime.now()) #Feedback 1 - arquivos conferidos
+sys.stdout.flush()
 
 gff = pr.read_gff3(gff, as_df=False) #lê o arquivo gff3
 
 print("Arquivo gff importado dentro do pyranges em", datetime.datetime.now()) #Feedback 2 - Importa o arquivo gff no pyranges 
+sys.stdout.flush()
 
 gffgeneplus=gff[(gff.Feature == "gene") & (gff.Strand == "+")] #separa fitas positivas
 gffgeneplus2=gffgeneplus.assign("PromoterStart", lambda x: x.Start-lenPromoter)
@@ -76,10 +79,12 @@ gffgenecomparison.End=gffgenecomparison.PromoterEnd
 gffgenecomparison.Feature = "Promoter"
 
 print("Arquivo preparado para o subtract", datetime.datetime.now(), "- Próximo passo: Subtract") #Feedback 3 - Arquivo preparado para o subtract
+sys.stdout.flush()
 
 regiaopromotora = gffgenecomparison.subtract(gff, strandedness="same", nb_cpu=mcores)  
 
 print("Subtract efetuado em", datetime.datetime.now(), "- Próximo passo: excluir overlaps") #Feedback 4 - Subtract efetuado, próximo passo - excluir overlaps
+sys.stdout.flush()
 
 IDanterior="1"
 for idpromoter in regiaopromotora.ID: 
@@ -101,6 +106,7 @@ for idpromoter in regiaopromotora.ID:
 
 
 print("Overlaps e repetições conferidos e corrigidos em", datetime.datetime.now(), "- Próximo passo: escrever arquivo fasta com as regiões promotoras") #Feedback 5 - Correção dos overlaps e repetições e indicação da próxima etapa
+sys.stdout.flush()
 
 if args.fixid:
         regiaopromotora.Chromosome = regiaopromotora.Chromosome.astype(str) + (f'.{versao}')
@@ -109,6 +115,7 @@ if args.fixid:
 #End não precisa ser ajustado
 
 print("  -Zerando os valores de start negativos",  datetime.datetime.now())
+sys.stdout.flush()
 
 zero=np.int32(0) #Zero com inteiro no mesmo formato do pyranges para evitar mensagem de erro
 
@@ -118,6 +125,7 @@ zerarpromotor.Start = zero
 regiaopromotora = pr.concat([regiaopromotora, zerarpromotor])
 
 print("  -Início da conversão para o arquivo fasta", datetime.datetime.now())
+sys.stdout.flush()
 
 #Escrevendo arquivo fasta com as regiões promotoras
 with open (outputfile,"w") as TesteFastaSeqPromotora:
@@ -126,4 +134,6 @@ with open (outputfile,"w") as TesteFastaSeqPromotora:
         for line in seqID:
             TesteFastaSeqPromotora.write(f'>{ID}\n{line}\n')
 
-print("Termino do script - arquivo fasta com a regiões promotoras finalizado em", datetime.datetime.now()) #Feedback 3 - Correção dos overlaps e repetições e indicação da próxima etapa
+print("Termino do script - arquivo fasta com a regiões promotoras finalizado em", datetime.datetime.now()) #Feedback 6 - Correção dos overlaps e repetições e indicação da próxima etapa
+sys.stdout.flush()
+
