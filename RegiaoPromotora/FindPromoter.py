@@ -5,6 +5,7 @@ import pyranges as pr
 import pandas as pd
 import os
 import datetime
+import numpy as np
 
 parser= argparse.ArgumentParser(description='Insert the lenth of the Expected Promoter')
 parser.add_argument('length', type=int, 
@@ -80,9 +81,6 @@ regiaopromotora = gffgenecomparison.subtract(gff, strandedness="same", nb_cpu=mc
 
 print("Subtract efetuado em", datetime.datetime.now(), "- Próximo passo: excluir overlaps") #Feedback 4 - Subtract efetuado, próximo passo - excluir overlaps
 
-#ler o arquivo da regiao promotora e vê se o ID correspondente no arquivo gffgeneplus "menos Promoter_" está a 1 index de distância, se não deleta ele do arquivo regiao promotora
-# agora que achei o gene que repete, da para fazer um subset bseado no ID e armazenar em uma variável e apagar os que repetem do regiaopromotora. COmpara o subset com o gffgeneplus e ver qual é o nearest upstream (ou downstream para comparar e concatenar novamente no regiaopromotora.
-
 IDanterior="1"
 for idpromoter in regiaopromotora.ID: 
     if idpromoter == IDanterior:
@@ -91,7 +89,14 @@ for idpromoter in regiaopromotora.ID:
         Pgeneid = idpromoter.replace("Promoter_", "")
         promotorcorreto = reppromoter.nearest(gff[gff.ID == Pgeneid], strandedness="same", how="downstream")
         promotorcorreto = promotorcorreto[promotorcorreto.Distance == 1]
-        regiaopromotora = pr.concat([regiaopromotora, promotorcorreto])
+        promotorcorretoconcat=pr.PyRanges(chromosomes=promotorcorreto.Chromosome, starts=promotorcorreto.Start, ends=promotorcorreto.End, strands=promotorcorreto.Strand) #Necessita-se excluir algumas colunas que são denominadas "*_b", pois há um erro que insere novas colunas em IDs com o mesmo cromossomo
+        promotorcorretoconcat.ID=promotorcorreto.ID
+        promotorcorretoconcat.Source=promotorcorreto.Source
+        promotorcorretoconcat.Feature=promotorcorreto.Feature
+        promotorcorretoconcat.Name=promotorcorreto.Name
+        promotorcorretoconcat.Score=promotorcorreto.Score
+        promotorcorretoconcat.Frame=promotorcorreto.Frame
+        regiaopromotora = pr.concat([regiaopromotora, promotorcorretoconcat])
     IDanterior=idpromoter
 
 
@@ -100,12 +105,25 @@ print("Overlaps e repetições conferidos e corrigidos em", datetime.datetime.no
 if args.fixid:
         regiaopromotora.Chromosome = regiaopromotora.Chromosome.astype(str) + (f'.{versao}')
 
+#Necessita-se zerar o Start caso haja valores negativos, pois o get_fasta não ajusta esses valores e não os reconhece
+#End não precisa ser ajustado
+
+print("  -Zerando os valores de start negativos",  datetime.datetime.now())
+
+zero=np.int32(0) #Zero com inteiro no mesmo formato do pyranges para evitar mensagem de erro
+
+zerarpromotor = regiaopromotora[regiaopromotora.Start < 0]
+regiaopromotora = regiaopromotora[regiaopromotora.Start >= 0]
+zerarpromotor.Start = zero
+regiaopromotora = pr.concat([regiaopromotora, zerarpromotor])
+
+print("  -Início da conversão para o arquivo fasta", datetime.datetime.now())
+
 #Escrevendo arquivo fasta com as regiões promotoras
 with open (outputfile,"w") as TesteFastaSeqPromotora:
     for ID in regiaopromotora.ID:
         seqID = pr.get_fasta(regiaopromotora[regiaopromotora.ID == ID], genoma)
         for line in seqID:
             TesteFastaSeqPromotora.write(f'>{ID}\n{line}\n')
-        
 
 print("Termino do script - arquivo fasta com a regiões promotoras finalizado em", datetime.datetime.now()) #Feedback 3 - Correção dos overlaps e repetições e indicação da próxima etapa
