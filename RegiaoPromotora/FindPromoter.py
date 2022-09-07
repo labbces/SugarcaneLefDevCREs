@@ -127,7 +127,7 @@ print("Overlaps e repetições conferidos e corrigidos em", datetime.datetime.no
 sys.stdout.flush()
 
 if args.fixid:
-        regiaopromotora.Chromosome = regiaopromotora.Chromosome.astype(str) + (f'.{versao}')
+    regiaopromotora.Chromosome = regiaopromotora.Chromosome.astype(str) + (f'.{versao}')
 
 #Necessita-se zerar o Start caso haja valores negativos, pois o get_fasta não ajusta esses valores e não os reconhece
 #End não precisa ser ajustado
